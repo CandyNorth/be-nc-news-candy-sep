@@ -226,5 +226,83 @@ describe("app.js", () => {
           expect(body.msg).toBe("Not Found");
         });
     });
+    test("POST:405 will return a  'Method Not Allowed' for unsupported HTTP method", () => {
+      return req
+        .post("/api/articles")
+        .expect(405)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Method Not Allowed");
+        });
+    });
+    test("DELETE:405 will return 'Method Not Allowed' for an unsupported HTTP method", () => {
+      return req
+        .delete("/api/articles")
+        .expect(405)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Method Not Allowed");
+        });
+    });
+  });
+  describe("GET /api/articles/:article_id/comments", () => {
+    test("200: responds with an array of comments for the given article_id", () => {
+      return request(app)
+        .get("/api/articles/1/comments")
+        .expect(200)
+        .then(({ body }) => {
+          console.log(body.comments);
+          expect(Array.isArray(body.comments)).toBe(true);
+          expect(body.comments.length).toBeGreaterThan(0);
+          body.comments.forEach((comment) => {
+            expect(comment).toHaveProperty("comment_id", expect.any(Number));
+            expect(comment).toHaveProperty("votes", expect.any(Number));
+            expect(comment).toHaveProperty("created_at", expect.any(String));
+            expect(comment).toHaveProperty("author", expect.any(String));
+            expect(comment).toHaveProperty("body", expect.any(String));
+            expect(comment).toHaveProperty("article_id", 1);
+          });
+        });
+    });
+    test("200: comments are served with the most recent first", () => {
+      return request(app)
+        .get("/api/articles/1/comments")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.comments).toBeSortedBy("created_at", {
+            descending: true,
+          });
+        });
+    });
+    test("404: responds with an error for a non-existent article_id", () => {
+      return request(app)
+        .get("/api/articles/999/comments")
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Not Found");
+        });
+    });
+    test("400: responds with an error for an invalid article_id", () => {
+      return request(app)
+        .get("/api/articles/not-a-number/comments")
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Bad Request");
+        });
+    });
+    test("POST:405 will return a  'Method Not Allowed' for unsupported HTTP method", () => {
+      return req
+        .post("/api/articles/1/comments")
+        .expect(405)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Method Not Allowed");
+        });
+    });
+    test("DELETE:405 will return 'Method Not Allowed' for an unsupported HTTP method", () => {
+      return req
+        .delete("/api/articles/1/comments")
+        .expect(405)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Method Not Allowed");
+        });
+    });
   });
 });

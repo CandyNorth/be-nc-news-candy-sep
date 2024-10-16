@@ -6,6 +6,7 @@ const {
   getArticleById,
   getArticles,
 } = require("./controllers/articles-controller");
+const { getCommentsByArticleId } = require("./controllers/comments-controller");
 
 app.use(express.json());
 
@@ -17,9 +18,14 @@ app.get("/api", (request, response) => {
   response.json(endpoints);
 });
 
+//Articles endpoint
 app.get("/api/articles", getArticles);
 
+//Article_id endpoint
 app.get("/api/articles/:article_id", getArticleById);
+
+//Comments endpoint
+app.get("/api/articles/:article_id/comments", getCommentsByArticleId);
 
 // Request method whitelist/handler
 app.use((request, response, next) => {
