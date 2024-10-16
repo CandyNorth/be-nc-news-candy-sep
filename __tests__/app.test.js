@@ -1,12 +1,12 @@
 const { app, endpoints } = require("../app");
-const request = require("supertest")
+const request = require("supertest");
 const req = request(app);
-const db = require("../db/connection")
-const seed = require("../db/seeds/seed")
-const testData = require("../db/data/test-data/index")
+const db = require("../db/connection");
+const seed = require("../db/seeds/seed");
+const testData = require("../db/data/test-data/index");
 
-beforeEach(() => seed(testData))
-afterAll(() => db.end())
+beforeEach(() => seed(testData));
+afterAll(() => db.end());
 
 describe("app.js", () => {
   describe("/api/topics", () => {
@@ -111,37 +111,55 @@ describe("app.js", () => {
         });
     });
   });
-  describe('/api/articles/:article_id', () => {
-    test('GET:200 sends an array with a valid article inside to the client', () => {
+  describe("/api/articles/:article_id", () => {
+    test("GET:200 sends an array with a valid article inside to the client", () => {
       return req
-        .get('/api/articles/1')
+        .get("/api/articles/1")
         .expect(200)
         .then((response) => {
           expect(response.body.article.article_id).toBe(1);
-          expect(response.body.article.title).toBe('Living in the shadow of a great man');
-          expect(response.body.article.topic).toBe('mitch');
-          expect(response.body.article.author).toBe('butter_bridge');
-          expect(response.body.article.body).toBe('I find this existence challenging');
-          expect(response.body.article.created_at).toBe('2020-07-09T20:11:00.000Z');
+          expect(response.body.article.title).toBe(
+            "Living in the shadow of a great man",
+          );
+          expect(response.body.article.topic).toBe("mitch");
+          expect(response.body.article.author).toBe("butter_bridge");
+          expect(response.body.article.body).toBe(
+            "I find this existence challenging",
+          );
+          expect(response.body.article.created_at).toBe(
+            "2020-07-09T20:11:00.000Z",
+          );
           expect(response.body.article.votes).toBe(100);
-          expect(response.body.article.article_img_url).toBe('https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700');
+          expect(response.body.article.article_img_url).toBe(
+            "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700",
+          );
         });
-
     });
-    test('GET:404 sends an appropriate status and error message when given a valid but non-existent id', () => {
+    test("GET:404 sends an appropriate status and error message when given a valid but non-existent id", () => {
       return req
-        .get('/api/articles/999')
+        .get("/api/articles/999")
         .expect(404)
         .then((response) => {
-          expect(response.body.msg).toBe('Not Found');
+          expect(response.body.msg).toBe("Not Found");
         });
     });
-    test('GET:400 responds with an appropriate error message when given an invalid id', () => {
+    test("GET:400 responds with an appropriate error message when given an invalid id", () => {
       return req
-        .get('/api/articles/not-an-id')
+        .get("/api/articles/not-an-id")
         .expect(400)
         .then((response) => {
-          expect(response.body.msg).toBe('Bad Request');
+          expect(response.body.msg).toBe("Bad Request");
+        });
+    });
+  });
+  describe("/api/articles", () => {
+    test("GET:200 sends an array of articles to the client", () => {
+      return request(app)
+        .get("/api/articles")
+        .expect(200)
+        .then(({ body }) => {
+          expect(Array.isArray(body.articles)).toBe(true);
+          expect(body.articles.length).toBeGreaterThan(0);
         });
     });
   });
