@@ -18,26 +18,14 @@ exports.selectArticleById = (article_id) => {
 };
 
 exports.selectArticles = () => {
-  return db.query("SELECT * FROM articles;").then(({ rows }) => rows);
+  return db
+    .query(
+      `SELECT articles.author, articles.title, articles.article_id, articles.topic, articles.created_at, articles.votes, articles.article_img_url,
+      COUNT(comments.comment_id)::INT AS comment_count
+    FROM articles
+    LEFT JOIN comments ON articles.article_id = comments.article_id
+    GROUP BY articles.article_id
+    ORDER BY articles.created_at DESC;`,
+    )
+    .then(({ rows }) => rows);
 };
-
-// exports.selectArticles = (articles) => {
-//     return db
-//       .query('SELECT * FROM articles;')
-//       .then(({ rows }) => {
-//         rows.forEach((article) => {
-//           const commentCount = db.query("SELECT COUNT(*) FROM comments WHERE article_id = $1;", [article_id_here])
-//           article.comment_count = 69
-//         })
-//         console.log(rows)
-//         const articles = rows;
-//         if (!articles) {
-//           return Promise.reject({
-//             status: 404,
-//             msg: "Not Found"
-//           });
-//         }
-//         return rows;
-//       })
-//       .catch();
-//   };

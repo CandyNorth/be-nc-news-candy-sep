@@ -162,5 +162,69 @@ describe("app.js", () => {
           expect(body.articles.length).toBeGreaterThan(0);
         });
     });
+    test("GET:200 each article has the required properties and no body", () => {
+      return request(app)
+        .get("/api/articles")
+        .expect(200)
+        .then(({ body }) => {
+          body.articles.forEach((article) => {
+            expect(article).toHaveProperty("author");
+            expect(article).toHaveProperty("title");
+            expect(article).toHaveProperty("article_id");
+            expect(article).toHaveProperty("topic");
+            expect(article).toHaveProperty("created_at");
+            expect(article).toHaveProperty("votes");
+            expect(article).toHaveProperty("article_img_url");
+            expect(article).toHaveProperty("comment_count");
+            expect(article).not.toHaveProperty("body");
+            expect(article).not.toHaveProperty("not_a_property");
+          });
+        });
+    });
+    test("GET:200 each article includes a comment_count", () => {
+      return request(app)
+        .get("/api/articles")
+        .expect(200)
+        .then(({ body }) => {
+          body.articles.forEach((article) => {
+            expect(article).toHaveProperty("comment_count");
+            expect(typeof article.comment_count).toBe("number");
+          });
+        });
+    });
+    test("GET:200 articles are sorted by date in descending order", () => {
+      return request(app)
+        .get("/api/articles")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles).toBeSortedBy("created_at", {
+            descending: true,
+          });
+        });
+    });
+    test("GET:404 responds with an error for a non-existent route", () => {
+      return request(app)
+        .get("/api/non-existent-route")
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Route not found");
+        });
+    });
+    test("GET:400 responds with an error for an invalid article_id", () => {
+      return request(app)
+        .get("/api/articles/not-a-number")
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Bad Request");
+        });
+    });
+    test("GET:404 responds with an error for a non-existent article_id", () => {
+      return request(app)
+        .get("/api/articles/99999")
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Not Found");
+        });
+    });
   });
 });
