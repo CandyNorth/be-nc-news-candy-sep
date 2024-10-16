@@ -1,12 +1,12 @@
 const { app, endpoints } = require("../app");
-const request = require("supertest")
+const request = require("supertest");
 const req = request(app);
-const db = require("../db/connection")
-const seed = require("../db/seeds/seed")
-const testData = require("../db/data/test-data/index")
+const db = require("../db/connection");
+const seed = require("../db/seeds/seed");
+const testData = require("../db/data/test-data/index");
 
-beforeEach(() => seed(testData))
-afterAll(() => db.end())
+beforeEach(() => seed(testData));
+afterAll(() => db.end());
 
 describe("app.js", () => {
   describe("/api/topics", () => {
@@ -111,37 +111,119 @@ describe("app.js", () => {
         });
     });
   });
-  describe('/api/articles/:article_id', () => {
-    test('GET:200 sends an array with a valid article inside to the client', () => {
+  describe("/api/articles/:article_id", () => {
+    test("GET:200 sends an array with a valid article inside to the client", () => {
       return req
-        .get('/api/articles/1')
+        .get("/api/articles/1")
         .expect(200)
         .then((response) => {
           expect(response.body.article.article_id).toBe(1);
-          expect(response.body.article.title).toBe('Living in the shadow of a great man');
-          expect(response.body.article.topic).toBe('mitch');
-          expect(response.body.article.author).toBe('butter_bridge');
-          expect(response.body.article.body).toBe('I find this existence challenging');
-          expect(response.body.article.created_at).toBe('2020-07-09T20:11:00.000Z');
+          expect(response.body.article.title).toBe(
+            "Living in the shadow of a great man",
+          );
+          expect(response.body.article.topic).toBe("mitch");
+          expect(response.body.article.author).toBe("butter_bridge");
+          expect(response.body.article.body).toBe(
+            "I find this existence challenging",
+          );
+          expect(response.body.article.created_at).toBe(
+            "2020-07-09T20:11:00.000Z",
+          );
           expect(response.body.article.votes).toBe(100);
-          expect(response.body.article.article_img_url).toBe('https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700');
+          expect(response.body.article.article_img_url).toBe(
+            "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700",
+          );
         });
-
     });
-    test('GET:404 sends an appropriate status and error message when given a valid but non-existent id', () => {
+    test("GET:404 sends an appropriate status and error message when given a valid but non-existent id", () => {
       return req
-        .get('/api/articles/999')
+        .get("/api/articles/999")
         .expect(404)
         .then((response) => {
-          expect(response.body.msg).toBe('Not Found');
+          expect(response.body.msg).toBe("Not Found");
         });
     });
-    test('GET:400 responds with an appropriate error message when given an invalid id', () => {
+    test("GET:400 responds with an appropriate error message when given an invalid id", () => {
       return req
-        .get('/api/articles/not-an-id')
+        .get("/api/articles/not-an-id")
         .expect(400)
         .then((response) => {
-          expect(response.body.msg).toBe('Bad Request');
+          expect(response.body.msg).toBe("Bad Request");
+        });
+    });
+  });
+  describe("/api/articles", () => {
+    test("GET:200 sends an array of articles to the client", () => {
+      return request(app)
+        .get("/api/articles")
+        .expect(200)
+        .then(({ body }) => {
+          expect(Array.isArray(body.articles)).toBe(true);
+          expect(body.articles.length).toBeGreaterThan(0);
+        });
+    });
+    test("GET:200 each article has the required properties and no body", () => {
+      return request(app)
+        .get("/api/articles")
+        .expect(200)
+        .then(({ body }) => {
+          body.articles.forEach((article) => {
+            expect(article).toHaveProperty("author");
+            expect(article).toHaveProperty("title");
+            expect(article).toHaveProperty("article_id");
+            expect(article).toHaveProperty("topic");
+            expect(article).toHaveProperty("created_at");
+            expect(article).toHaveProperty("votes");
+            expect(article).toHaveProperty("article_img_url");
+            expect(article).toHaveProperty("comment_count");
+            expect(article).not.toHaveProperty("body");
+            expect(article).not.toHaveProperty("not_a_property");
+          });
+        });
+    });
+    test("GET:200 each article includes a comment_count", () => {
+      return request(app)
+        .get("/api/articles")
+        .expect(200)
+        .then(({ body }) => {
+          body.articles.forEach((article) => {
+            expect(article).toHaveProperty("comment_count");
+            expect(typeof article.comment_count).toBe("number");
+          });
+        });
+    });
+    test("GET:200 articles are sorted by date in descending order", () => {
+      return request(app)
+        .get("/api/articles")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles).toBeSortedBy("created_at", {
+            descending: true,
+          });
+        });
+    });
+    test("GET:404 responds with an error for a non-existent route", () => {
+      return request(app)
+        .get("/api/non-existent-route")
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Route not found");
+        });
+    });
+    test("GET:400 responds with an error for an invalid article_id", () => {
+      return request(app)
+        .get("/api/articles/not-a-number")
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Bad Request");
+        });
+    });
+    test("GET:404 responds with an error for a non-existent article_id", () => {
+      return request(app)
+        .get("/api/articles/99999")
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Not Found");
         });
     });
   });
