@@ -1,14 +1,37 @@
-const { selectCommentsByArticleId } = require("../models/comments-model");
+const {
+  selectCommentsByArticleId,
+  insertCommentByArticleId,
+} = require("../models/comments-model");
 
-exports.getCommentsByArticleId = (req, res, next) => {
-  const { article_id } = req.params;
+exports.getCommentsByArticleId = (request, response, next) => {
+  const { article_id } = request.params;
   selectCommentsByArticleId(article_id)
     .then((comments) => {
-      res.status(200).json({ comments });
+      response.status(200).json({ comments });
     })
     .catch((err) => {
       if (err) {
         next(err);
       }
+    });
+};
+
+exports.postCommentByArticleId = (request, response, next) => {
+  const { article_id } = request.params;
+  const { username, body } = request.body;
+
+  console.log(request.body.username);
+  if (!username || !body) {
+    return response
+      .status(400)
+      .json({ msg: "Bad Request: Missing required fields" });
+  }
+
+  insertCommentByArticleId(article_id, username, body)
+    .then((comment) => {
+      response.status(201).json({ comment });
+    })
+    .catch((err) => {
+      next(err);
     });
 };
