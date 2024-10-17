@@ -14,11 +14,27 @@ exports.selectCommentsByArticleId = (article_id) => {
           .query("SELECT * FROM articles WHERE article_id = $1", [article_id])
           .then(({ rows }) => {
             if (rows.length === 0) {
-              return Promise.reject({ status: 404, msg: "Article not found" });
+              return Promise.reject({ status: 404, msg: "Not Found" });
             }
             return [];
           });
       }
       return rows;
+    });
+};
+
+exports.insertCommentByArticleId = (article_id, username, body) => {
+  return db
+    .query(
+      `INSERT INTO comments (article_id, author, body)
+       VALUES ($1, $2, $3)
+       RETURNING *`,
+      [article_id, username, body],
+    )
+    .then(({ rows }) => {
+      if (rows.length === 0) {
+        return Promise.reject({ status: 404, msg: "Article not found" });
+      }
+      return rows[0];
     });
 };

@@ -154,7 +154,7 @@ describe("app.js", () => {
   });
   describe("/api/articles", () => {
     test("GET:200 sends an array of articles to the client", () => {
-      return request(app)
+      return req
         .get("/api/articles")
         .expect(200)
         .then(({ body }) => {
@@ -163,7 +163,7 @@ describe("app.js", () => {
         });
     });
     test("GET:200 each article has the required properties and no body", () => {
-      return request(app)
+      return req
         .get("/api/articles")
         .expect(200)
         .then(({ body }) => {
@@ -182,7 +182,7 @@ describe("app.js", () => {
         });
     });
     test("GET:200 each article includes a comment_count", () => {
-      return request(app)
+      return req
         .get("/api/articles")
         .expect(200)
         .then(({ body }) => {
@@ -193,7 +193,7 @@ describe("app.js", () => {
         });
     });
     test("GET:200 articles are sorted by date in descending order", () => {
-      return request(app)
+      return req
         .get("/api/articles")
         .expect(200)
         .then(({ body }) => {
@@ -203,7 +203,7 @@ describe("app.js", () => {
         });
     });
     test("GET:404 responds with an error for a non-existent route", () => {
-      return request(app)
+      return req
         .get("/api/non-existent-route")
         .expect(404)
         .then(({ body }) => {
@@ -211,7 +211,7 @@ describe("app.js", () => {
         });
     });
     test("GET:400 responds with an error for an invalid article_id", () => {
-      return request(app)
+      return req
         .get("/api/articles/not-a-number")
         .expect(400)
         .then(({ body }) => {
@@ -219,7 +219,7 @@ describe("app.js", () => {
         });
     });
     test("GET:404 responds with an error for a non-existent article_id", () => {
-      return request(app)
+      return req
         .get("/api/articles/99999")
         .expect(404)
         .then(({ body }) => {
@@ -245,11 +245,10 @@ describe("app.js", () => {
   });
   describe("GET /api/articles/:article_id/comments", () => {
     test("200: responds with an array of comments for the given article_id", () => {
-      return request(app)
+      return req
         .get("/api/articles/1/comments")
         .expect(200)
         .then(({ body }) => {
-          console.log(body.comments);
           expect(Array.isArray(body.comments)).toBe(true);
           expect(body.comments.length).toBeGreaterThan(0);
           body.comments.forEach((comment) => {
@@ -263,7 +262,7 @@ describe("app.js", () => {
         });
     });
     test("200: comments are served with the most recent first", () => {
-      return request(app)
+      return req
         .get("/api/articles/1/comments")
         .expect(200)
         .then(({ body }) => {
@@ -273,7 +272,7 @@ describe("app.js", () => {
         });
     });
     test("404: responds with an error for a non-existent article_id", () => {
-      return request(app)
+      return req
         .get("/api/articles/999/comments")
         .expect(404)
         .then(({ body }) => {
@@ -281,19 +280,11 @@ describe("app.js", () => {
         });
     });
     test("400: responds with an error for an invalid article_id", () => {
-      return request(app)
+      return req
         .get("/api/articles/not-a-number/comments")
         .expect(400)
         .then(({ body }) => {
           expect(body.msg).toBe("Bad Request");
-        });
-    });
-    test("POST:405 will return a  'Method Not Allowed' for unsupported HTTP method", () => {
-      return req
-        .post("/api/articles/1/comments")
-        .expect(405)
-        .then(({ body }) => {
-          expect(body.msg).toBe("Method Not Allowed");
         });
     });
     test("DELETE:405 will return 'Method Not Allowed' for an unsupported HTTP method", () => {
@@ -302,6 +293,77 @@ describe("app.js", () => {
         .expect(405)
         .then(({ body }) => {
           expect(body.msg).toBe("Method Not Allowed");
+        });
+    });
+  });
+  describe("POST /api/articles/:article_id/comments", () => {
+    test("201: this will insert someones new comment and come back/respond with the posted comment", () => {
+      const newComment = {
+        username: "rogersop",
+        body: "I only like soap operas with cheese involved",
+      };
+      return req
+        .post("/api/articles/1/comments")
+        .send(newComment)
+        .expect(201)
+        .then(({ body }) => {
+          expect(body.comment).toMatchObject({
+            comment_id: expect.any(Number),
+            body: "I only like soap operas with cheese involved",
+            article_id: 1,
+            author: "rogersop",
+            votes: 0,
+            created_at: expect.any(String),
+          });
+        });
+    });
+    test("400: comes back with an error for missing required fields", () => {
+      const invalidComment = { username: "butter_bridge" };
+      return req
+        .post("/api/articles/1/comments")
+        .send(invalidComment)
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Bad Request: Missing required fields");
+        });
+    });
+    test("404: comes back with an error for a non-existent article_id", () => {
+      const newComment = {
+        username: "butter_bridge",
+        body: "This is a test comment",
+      };
+      return req
+        .post("/api/articles/999/comments")
+        .send(newComment)
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Not Found");
+        });
+    });
+    test("400: comes back with an error for an invalid article_id", () => {
+      const newComment = {
+        username: "lettuce_pray",
+        body: "eat more veg you absolute carnivore!!",
+      };
+      return req
+        .post("/api/articles/not-a-number/comments")
+        .send(newComment)
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Bad Request");
+        });
+    });
+    test("404: comes back with an error for a user that doesn't exist", () => {
+      const newComment = {
+        username: "non_existent_user",
+        body: "non existent grilled cheese sandwich",
+      };
+      return req
+        .post("/api/articles/1/comments")
+        .send(newComment)
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Not Found");
         });
     });
   });

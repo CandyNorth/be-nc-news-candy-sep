@@ -6,7 +6,10 @@ const {
   getArticleById,
   getArticles,
 } = require("./controllers/articles-controller");
-const { getCommentsByArticleId } = require("./controllers/comments-controller");
+const {
+  getCommentsByArticleId,
+  postCommentByArticleId,
+} = require("./controllers/comments-controller");
 
 app.use(express.json());
 
@@ -27,6 +30,8 @@ app.get("/api/articles/:article_id", getArticleById);
 //Comments endpoint
 app.get("/api/articles/:article_id/comments", getCommentsByArticleId);
 
+app.post("/api/articles/:article_id/comments", postCommentByArticleId);
+
 // Request method whitelist/handler
 app.use((request, response, next) => {
   // if (!/^(GET|PUT|POST|DELETE)$/.test(request.method)) {
@@ -46,8 +51,16 @@ app.all("*", (request, response, next) => {
 app.use((err, request, response, next) => {
   if (err.code === "22P02") {
     response.status(400).json({ msg: "Bad Request" });
+  } else if (err.code === "23503") {
+    response.status(404).json({ msg: "Not Found" });
+  } else if (err.status) {
+    if (err.msg) {
+      response.status(err.status).json({ msg: err.msg });
+    } else {
+      response.status(err.status).json({ msg: "Bad Request" });
+    }
   } else {
-    next(err);
+    response.status(500).json({ msg: "Internal Server Error" });
   }
 });
 
