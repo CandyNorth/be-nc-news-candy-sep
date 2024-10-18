@@ -5,6 +5,7 @@ const { getTopics } = require("./controllers/topics-controller");
 const {
   getArticleById,
   getArticles,
+  patchArticleVotes,
 } = require("./controllers/articles-controller");
 const {
   getCommentsByArticleId,
@@ -30,7 +31,11 @@ app.get("/api/articles/:article_id", getArticleById);
 //Comments endpoint
 app.get("/api/articles/:article_id/comments", getCommentsByArticleId);
 
+//New comments post
 app.post("/api/articles/:article_id/comments", postCommentByArticleId);
+
+//Article_id endpoint for votes
+app.patch("/api/articles/:article_id", patchArticleVotes);
 
 // Request method whitelist/handler
 app.use((request, response, next) => {
