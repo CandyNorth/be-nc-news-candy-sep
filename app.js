@@ -10,6 +10,7 @@ const {
 const {
   getCommentsByArticleId,
   postCommentByArticleId,
+  removeCommentById,
 } = require("./controllers/comments-controller");
 
 app.use(express.json());
@@ -31,11 +32,14 @@ app.get("/api/articles/:article_id", getArticleById);
 //Comments endpoint
 app.get("/api/articles/:article_id/comments", getCommentsByArticleId);
 
-//New comments post
+//New comments post endpoint
 app.post("/api/articles/:article_id/comments", postCommentByArticleId);
 
 //Article_id endpoint for votes
 app.patch("/api/articles/:article_id", patchArticleVotes);
+
+//Delete comments endpoint
+app.delete("/api/comments/:comment_id", removeCommentById);
 
 // Request method whitelist/handler
 app.use((request, response, next) => {
