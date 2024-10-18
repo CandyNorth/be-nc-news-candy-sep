@@ -437,12 +437,50 @@ describe("app.js", () => {
           expect(body.msg).toBe("Not Found");
         });
     });
-
     test("400: willl respond with an error for an article_id that is not valid", () => {
       const updateVotes = { inc_votes: 1 };
       return req
         .patch("/api/articles/this-is-not-a-number")
         .send(updateVotes)
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Bad Request");
+        });
+    });
+  });
+  describe("DELETE /api/comments/:comment_id", () => {
+    test("204: will delete the comment and doesn't send back a body", () => {
+      return req.delete("/api/comments/1").expect(204);
+    });
+    test("204: will delete a comment test 2", () => {
+      return req.delete("/api/comments/3").expect(204);
+    });
+    test("204: will delete a comment and confirm that it doesn't exist in the database anymore", () => {
+      return req
+        .delete("/api/comments/2")
+        .expect(204)
+        .then(() => {
+          //trying to get the same comment ...
+          return req.get("/api/articles/1/comments");
+        })
+        .then(({ body }) => {
+          const doesDeletedCommentStillExist = body.comments.some(
+            (comment) => comment.comment_id === 2,
+          );
+          expect(doesDeletedCommentStillExist).toBe(false);
+        });
+    });
+    test("404: will respond with an error message when given an id that doesn't exist", () => {
+      return req
+        .delete("/api/comments/9999")
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Comment not found");
+        });
+    });
+    test("400: will respond with an error message when given a id that is not valid", () => {
+      return req
+        .delete("/api/comments/not-a-number")
         .expect(400)
         .then(({ body }) => {
           expect(body.msg).toBe("Bad Request");
