@@ -487,4 +487,21 @@ describe("app.js", () => {
         });
     });
   });
+  describe("/api/users", () => {
+    test("GET 200: will send an array of users to the client", () => {
+      return req
+        .get("/api/users")
+        .expect(200)
+        .then(({ body }) => {
+          console.log(body.users);
+          expect(Array.isArray(body.users)).toBe(true);
+          expect(body.users.length).toBeGreaterThan(0);
+          body.users.forEach((user) => {
+            expect(user).toHaveProperty("username");
+            expect(user).toHaveProperty("name");
+            expect(user).toHaveProperty("avatar_url");
+          });
+        });
+    });
+  });
 });
