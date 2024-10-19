@@ -18,15 +18,13 @@ exports.getArticleById = (request, response, next) => {
 };
 
 exports.getArticles = (request, response, next) => {
-  const { articles } = request.params;
-  selectArticles(articles)
+  const { sort_by } = request.query;
+  selectArticles(sort_by)
     .then((articles) => {
       response.status(200).send({ articles });
     })
     .catch((err) => {
-      if (err) {
-        next(err);
-      }
+      next(err);
     });
 };
 

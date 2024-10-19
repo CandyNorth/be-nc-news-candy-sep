@@ -520,4 +520,24 @@ describe("app.js", () => {
         });
     });
   });
+  describe("GET /api/articles (sorting)", () => {
+    test("200 will make sure the articles by default are sorted by date in descending order", () => {
+      return req
+        .get("/api/articles")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles).toBeSortedBy("created_at", {
+            descending: true,
+          });
+        });
+    });
+    test("200 will sort all articles in descending order by votes ", () => {
+      return req
+        .get("/api/articles?sort_by=votes")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles).toBeSortedBy("votes", { descending: true });
+        });
+    });
+  });
 });
