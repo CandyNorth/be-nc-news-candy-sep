@@ -503,5 +503,21 @@ describe("app.js", () => {
           });
         });
     });
+    test("GET 404 will respond with an error for a route that does not exist", () => {
+      return req
+        .get("/api/userss")
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Route not found");
+        });
+    });
+    test("POST 405: will return a 'Method Not Allowed' for an unsupported HTTP method", () => {
+      return req
+        .post("/api/users")
+        .expect(405)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Method Not Allowed");
+        });
+    });
   });
 });
