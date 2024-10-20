@@ -17,7 +17,7 @@ exports.selectArticleById = (article_id) => {
     .catch();
 };
 
-exports.selectArticles = (sort_by = "created_at") => {
+exports.selectArticles = (sort_by = "created_at", order = "desc") => {
   const validColumns = [
     "author",
     "title",
@@ -40,10 +40,16 @@ exports.selectArticles = (sort_by = "created_at") => {
     GROUP BY articles.article_id
   `;
 
+  const validOrders = ["asc", "desc"];
+
+  if (!validOrders.includes(order.toLowerCase())) {
+    return Promise.reject({ status: 400, msg: "Invalid order query" });
+  }
+
   if (sort_by === "comment_count") {
-    query += ` ORDER BY comment_count DESC`;
+    query += ` ORDER BY comment_count ${order.toUpperCase()}`;
   } else {
-    query += ` ORDER BY articles.${sort_by} DESC`;
+    query += ` ORDER BY articles.${sort_by} ${order.toUpperCase()}`;
   }
 
   return db.query(query).then(({ rows }) => rows);

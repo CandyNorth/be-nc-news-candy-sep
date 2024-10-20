@@ -539,5 +539,29 @@ describe("app.js", () => {
           expect(body.articles).toBeSortedBy("votes", { descending: true });
         });
     });
+    test("200: will sort the articles by votes in ascending order", () => {
+      return req
+        .get("/api/articles?sort_by=votes&order=asc")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles).toBeSortedBy("votes", { ascending: true });
+        });
+    });
+    test("400: returns an error for an invalid sort_by query", () => {
+      return req
+        .get("/api/articles?sort_by=invalid_column")
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Invalid sort column");
+        });
+    });
+    test("400 willreturn an error for an order query that is not valid", () => {
+      return req
+        .get("/api/articles?order=invalid_order")
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Invalid order query");
+        });
+    });
   });
 });
