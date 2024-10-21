@@ -493,7 +493,6 @@ describe("app.js", () => {
         .get("/api/users")
         .expect(200)
         .then(({ body }) => {
-          console.log(body.users);
           expect(Array.isArray(body.users)).toBe(true);
           expect(body.users.length).toBeGreaterThan(0);
           body.users.forEach((user) => {
@@ -561,6 +560,47 @@ describe("app.js", () => {
         .expect(400)
         .then(({ body }) => {
           expect(body.msg).toBe("Invalid order query");
+        });
+    });
+  });
+  describe("GET /api/articles (topic query)", () => {
+    test("200 will filter the articles by a topic", () => {
+      return req
+        .get("/api/articles?topic=cats")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles).toBeInstanceOf(Array);
+          expect(body.articles.length).toBeGreaterThan(0);
+          body.articles.forEach((article) => {
+            expect(article.topic).toBe("cats");
+          });
+        });
+    });
+    test("200: will return an empty array when a topic has no articles", () => {
+      return req
+        .get("/api/articles?topic=paper")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles).toEqual([]);
+        });
+    });
+    test("404: will return error for a topic when it doesn't exist", () => {
+      return req
+        .get("/api/articles?topic=oh-no-no-topic-here")
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Topic not found");
+        });
+    });
+    test("200: will work with topic queries combined with the sort_by and order paramaters", () => {
+      return req
+        .get("/api/articles?topic=mitch&sort_by=votes&order=asc")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles).toBeSortedBy("votes", { ascending: true });
+          body.articles.forEach((article) => {
+            expect(article.topic).toBe("mitch");
+          });
         });
     });
   });
