@@ -151,6 +151,33 @@ describe("app.js", () => {
           expect(response.body.msg).toBe("Bad Request");
         });
     });
+    test("GET:200 will make sure that the article response will include a comment_count", () => {
+      return req
+        .get("/api/articles/1")
+        .expect(200)
+        .then((response) => {
+          expect(response.body.article).toHaveProperty("comment_count");
+          expect(typeof response.body.article.comment_count).toBe("number");
+        });
+    });
+    test("GET:200 will make sure an article response has the correct comment_count", () => {
+      return req
+        .get("/api/articles/1")
+        .expect(200)
+        .then((response) => {
+          expect(response.body.article).toHaveProperty("comment_count");
+          expect(typeof response.body.article.comment_count).toBe("number");
+          expect(response.body.article.comment_count).toBe(11);
+        });
+    });
+    test("GET:200 will make sure an article response has a comment_count of 0 for an article without comments", () => {
+      return req
+        .get("/api/articles/2")
+        .expect(200)
+        .then((response) => {
+          expect(response.body.article.comment_count).toBe(0);
+        });
+    });
   });
   describe("/api/articles", () => {
     test("GET:200 sends an array of articles to the client", () => {
