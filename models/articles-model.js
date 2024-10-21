@@ -17,7 +17,7 @@ exports.selectArticleById = (article_id) => {
     .catch();
 };
 
-exports.selectArticles = (sort_by = "created_at", order = "desc") => {
+exports.selectArticles = (sort_by = "created_at", order = "desc", topic) => {
   const validColumns = [
     "author",
     "title",
@@ -32,27 +32,55 @@ exports.selectArticles = (sort_by = "created_at", order = "desc") => {
     return Promise.reject({ status: 400, msg: "Invalid sort column" });
   }
 
-  let query = `
-    SELECT articles.author, articles.title, articles.article_id, articles.topic, articles.created_at, articles.votes, articles.article_img_url,
-    COUNT(comments.comment_id)::INT AS comment_count
-    FROM articles
-    LEFT JOIN comments ON articles.article_id = comments.article_id
-    GROUP BY articles.article_id
-  `;
-
   const validOrders = ["asc", "desc"];
 
   if (!validOrders.includes(order.toLowerCase())) {
     return Promise.reject({ status: 400, msg: "Invalid order query" });
   }
 
-  if (sort_by === "comment_count") {
-    query += ` ORDER BY comment_count ${order.toUpperCase()}`;
-  } else {
-    query += ` ORDER BY articles.${sort_by} ${order.toUpperCase()}`;
-  }
+  let query = `
+    SELECT articles.author, articles.title, articles.article_id, articles.topic, articles.created_at, articles.votes, articles.article_img_url,
+    COUNT(comments.comment_id)::INT AS comment_count
+    FROM articles
+    LEFT JOIN comments ON articles.article_id = comments.article_id
+  `;
 
-  return db.query(query).then(({ rows }) => rows);
+  const queryParams = [];
+
+  if (topic) {
+    return db
+      .query("SELECT * FROM topics WHERE slug = $1", [topic])
+      .then(({ rows }) => {
+        if (rows.length === 0) {
+          return Promise.reject({ status: 404, msg: "Topic not found" });
+        }
+        query += ` WHERE articles.topic = $1`;
+        queryParams.push(topic);
+        return;
+      })
+      .then(() => {
+        query += ` GROUP BY articles.article_id`;
+
+        if (sort_by === "comment_count") {
+          query += ` ORDER BY comment_count ${order.toUpperCase()}`;
+        } else {
+          query += ` ORDER BY articles.${sort_by} ${order.toUpperCase()}`;
+        }
+
+        return db.query(query, queryParams);
+      })
+      .then(({ rows }) => rows);
+  } else {
+    query += ` GROUP BY articles.article_id`;
+
+    if (sort_by === "comment_count") {
+      query += ` ORDER BY comment_count ${order.toUpperCase()}`;
+    } else {
+      query += ` ORDER BY articles.${sort_by} ${order.toUpperCase()}`;
+    }
+
+    return db.query(query).then(({ rows }) => rows);
+  }
 };
 
 exports.updateArticleVotes = (article_id, inc_votes) => {
