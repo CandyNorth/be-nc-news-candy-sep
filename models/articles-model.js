@@ -3,7 +3,16 @@ const db = require("../db/connection");
 
 exports.selectArticleById = (article_id) => {
   return db
-    .query("SELECT * FROM articles WHERE article_id = $1;", [article_id])
+    .query(
+      `
+      SELECT articles.*, COUNT(comments.comment_id)::INT AS comment_count
+      FROM articles
+      LEFT JOIN comments ON articles.article_id = comments.article_id
+      WHERE articles.article_id = $1
+      GROUP BY articles.article_id
+    `,
+      [article_id],
+    )
     .then(({ rows }) => {
       const article = rows[0];
       if (!article) {
@@ -12,9 +21,8 @@ exports.selectArticleById = (article_id) => {
           msg: "Not Found",
         });
       }
-      return rows[0];
-    })
-    .catch();
+      return article;
+    });
 };
 
 exports.selectArticles = (sort_by = "created_at", order = "desc", topic) => {
